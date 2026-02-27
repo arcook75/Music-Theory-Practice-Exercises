@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Treble Clef Note Reading – Formative Practice</title>
+
+<style>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #ffffff;
+  color: #111111;
+  margin: 0;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+.quiz-container {
+  max-width: 900px;
+  margin: auto;
+}
+
+.question {
+  border: 2px solid #000;
+  padding: 18px;
+  margin-bottom: 30px;
+}
+
+.staff svg {
+  width: 100%;
+  max-width: 700px;
+  height: 180px;
+}
+
+.options button {
+  margin: 6px 6px 6px 0;
+  padding: 8px 14px;
+  font-size: 1rem;
+  border: 2px solid #000;
+  background-color: #f2f2f2;
+  cursor: pointer;
+}
+
+.options button:focus {
+  outline: 3px solid #000;
+}
+
+.feedback {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.correct { color: #0b5e0b; }
+.incorrect { color: #8b0000; }
+
+.hint-button {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 2px solid #000;
+  background-color: #e6e6e6;
+  cursor: pointer;
+}
+
+.hint-text {
+  display: none;
+  margin-top: 8px;
+  font-size: 0.95rem;
+}
+</style>
+</head>
+
+<body>
+<div class="quiz-container">
+
+<h1>Treble Clef Note Reading – Formative Practice</h1>
+<p><strong>Instructions:</strong> Identify the pitch name (include ♯ or ♭ if present).</p>
+
+<div id="quiz"></div>
+
+</div>
+
+<script>
+
+const staffTop = 60;
+const spacing = 14;
+
+// 20 questions including ledger lines + accidentals
+const notes = [
+  {steps: 8, answer: "E", hint: "Bottom line."},
+  {steps: 6, answer: "G", hint: "Second line."},
+  {steps: 4, answer: "B", hint: "Middle line."},
+  {steps: 2, answer: "D", hint: "Fourth line."},
+  {steps: 0, answer: "F", hint: "Top line."},
+
+  {steps: 7, answer: "F♯", hint: "First space with a sharp."},
+  {steps: 5, answer: "A♭", hint: "Second space with a flat."},
+  {steps: 3, answer: "C♯", hint: "Third space with a sharp."},
+  {steps: 1, answer: "E♭", hint: "Fourth space with a flat."},
+
+  {steps: -1, answer: "G", hint: "Space above the staff."},
+  {steps: -2, answer: "A", hint: "First ledger line above."},
+  {steps: -3, answer: "B♭", hint: "Space above first ledger line."},
+  {steps: -4, answer: "C", hint: "Second ledger line above."},
+  {steps: -5, answer: "D♯", hint: "Space above second ledger line with sharp."},
+
+  {steps: 9, answer: "D", hint: "Space below bottom line."},
+  {steps: 10, answer: "C", hint: "First ledger line below."},
+  {steps: 11, answer: "B♭", hint: "Space below first ledger line."},
+  {steps: 12, answer: "A", hint: "Second ledger line below."},
+  {steps: 13, answer: "G♯", hint: "Space below second ledger line with sharp."},
+  {steps: 6, answer: "G♭", hint: "Second line with flat."}
+];
+
+const quizDiv = document.getElementById("quiz");
+
+notes.forEach((note, index) => {
+
+  const questionDiv = document.createElement("div");
+  questionDiv.className = "question";
+
+  const title = document.createElement("h3");
+  title.textContent = "Question " + (index + 1);
+  questionDiv.appendChild(title);
+
+  const staffDiv = document.createElement("div");
+  staffDiv.className = "staff";
+
+  const noteY = staffTop + (note.steps * spacing / 2);
+
+  let ledgerLines = "";
+
+  for (let s = -2; s >= note.steps; s -= 2) {
+    ledgerLines += `<line x1="315" y1="${staffTop + (s * spacing / 2)}"
+                      x2="385" y2="${staffTop + (s * spacing / 2)}"
+                      stroke="#000" stroke-width="2"/>`;
+  }
+
+  for (let s = 10; s <= note.steps; s += 2) {
+    ledgerLines += `<line x1="315" y1="${staffTop + (s * spacing / 2)}"
+                      x2="385" y2="${staffTop + (s * spacing / 2)}"
+                      stroke="#000" stroke-width="2"/>`;
+  }
+
+  const accidental = note.answer.includes("♯") ? "♯" :
+                     note.answer.includes("♭") ? "♭" : "";
+
+  const svg = `
+  <svg viewBox="0 0 750 200" aria-label="Treble clef staff with note">
+    
+    ${[0,1,2,3,4].map(i =>
+      `<line x1="120" y1="${staffTop + i*spacing}" 
+             x2="700" y2="${staffTop + i*spacing}" 
+             stroke="#000" stroke-width="2"/>`
+    ).join("")}
+
+    <text x="70" y="${staffTop + spacing*3.8}" 
+          font-size="95" 
+          font-family="serif"
+          fill="#000">𝄞</text>
+
+    ${ledgerLines}
+
+    ${accidental ? `<text x="300" y="${noteY+5}" 
+              font-size="28" 
+              font-family="serif"> ${accidental} </text>` : ""}
+
+    <ellipse cx="350" cy="${noteY}" 
+             rx="10" ry="7" fill="#000"/>
+  </svg>
+  `;
+
+  staffDiv.innerHTML = svg;
+  questionDiv.appendChild(staffDiv);
+
+  // Generate 5 plausible choices
+  const pitchLetters = ["A","B","C","D","E","F","G"];
+  const accidentals = ["","♯","♭"];
+  let choices = new Set([note.answer]);
+
+  while (choices.size < 5) {
+    const letter = pitchLetters[Math.floor(Math.random()*7)];
+    const acc = accidentals[Math.floor(Math.random()*3)];
+    choices.add(letter + acc);
+  }
+
+  const optionsDiv = document.createElement("div");
+  optionsDiv.className = "options";
+
+  Array.from(choices).sort(() => Math.random() - 0.5).forEach(choice => {
+    const button = document.createElement("button");
+    button.textContent = choice;
+    button.onclick = () => checkAnswer(button, note.answer, feedbackDiv);
+    optionsDiv.appendChild(button);
+  });
+
+  questionDiv.appendChild(optionsDiv);
+
+  const feedbackDiv = document.createElement("div");
+  feedbackDiv.className = "feedback";
+  questionDiv.appendChild(feedbackDiv);
+
+  const hintButton = document.createElement("button");
+  hintButton.textContent = "Show Hint";
+  hintButton.className = "hint-button";
+
+  const hintText = document.createElement("div");
+  hintText.className = "hint-text";
+  hintText.textContent = note.hint;
+
+  hintButton.onclick = () => {
+    hintText.style.display = hintText.style.display === "none" ? "block" : "none";
+  };
+
+  questionDiv.appendChild(hintButton);
+  questionDiv.appendChild(hintText);
+
+  quizDiv.appendChild(questionDiv);
+
+});
+
+function checkAnswer(button, correctAnswer, feedbackDiv) {
+  if (button.textContent === correctAnswer) {
+    feedbackDiv.textContent = "Correct. The pitch is " + correctAnswer + ".";
+    feedbackDiv.className = "feedback correct";
+  } else {
+    feedbackDiv.textContent = "Not quite. Check line/space position and accidental.";
+    feedbackDiv.className = "feedback incorrect";
+  }
+}
+
+</script>
+
+</body>
+</html>
